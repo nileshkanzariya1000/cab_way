@@ -124,8 +124,3 @@ class PhoneVerificationScreen extends StatelessWidget {
   }
 }
 
-void main() {
-  runApp(MaterialApp(
-    home: PhoneVerificationScreen(),
-  ));
-}

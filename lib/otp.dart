@@ -1,3 +1,4 @@
+import 'package:cab_way/home_screen.dart';
 import 'package:cab_way/sign_up.dart';
 import 'package:flutter/material.dart';
 
@@ -127,7 +128,7 @@ ElevatedButton.icon(
       ? () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => SignUpApp()),
+            MaterialPageRoute(builder: (context) => HomeScreen()),
           );
         }
       : null, // Disables button if OTP isn't complete
