@@ -3,6 +3,7 @@ import 'package:cab_way/track_ride_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 
 class BookRideScreen extends StatefulWidget {
   @override
@@ -16,77 +17,58 @@ class _BookRideScreenState extends State<BookRideScreen> {
   String _rideType = 'Select Ride Type';
   List<String> _rideTypes = ['Select Ride Type', 'Economy', 'Premium', 'Luxury'];
 
-  // Map and car movement logic
-  final LatLng _rajkotLocation = LatLng(22.3039, 70.8022);
-  LatLng _carLocation = LatLng(22.4000, 70.9000);
+  // Map and location logic
+  LatLng? _currentLocation;
   final MapController _mapController = MapController();
-  Timer? _timer;
-  final Distance _distance = Distance();
-  final double _averageSpeed = 60.0;
-
-  double _calculateDistance(LatLng start, LatLng end) {
-    return _distance.as(LengthUnit.Kilometer, start, end);
-  }
-
-  String _calculateTime(double distance) {
-    double timeInHours = distance / _averageSpeed;
-    int hours = timeInHours.floor();
-    int minutes = ((timeInHours - hours) * 60).round();
-    return "${hours > 0 ? '$hours hr ' : ''}${minutes} min";
-  }
-
-  void _moveCarDynamically() {
-    _timer = Timer.periodic(Duration(milliseconds: 50), (timer) {
-      setState(() {
-        double totalDistance = _calculateDistance(_carLocation, _rajkotLocation);
-        if (totalDistance < 0.1) {
-          timer.cancel();
-        } else {
-          double step = 0.01;
-          LatLng direction = LatLng(
-            _rajkotLocation.latitude - _carLocation.latitude,
-            _rajkotLocation.longitude - _carLocation.longitude,
-          );
-          _carLocation = LatLng(
-            _carLocation.latitude + (direction.latitude * step / totalDistance),
-            _carLocation.longitude + (direction.longitude * step / totalDistance),
-          );
-        }
-      });
-    });
-  }
-
-  void _cancelRide() {
-    _timer?.cancel();
-    setState(() {
-      _carLocation = LatLng(22.4000, 70.9000);
-    });
-  }
 
   @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled
+      return Future.error('Location services are disabled.');
+    }
+
+    // Check for location permissions
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied
+        return Future.error('Location permissions are denied.');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are permanently denied
+      return Future.error('Location permissions are permanently denied.');
+    }
+
+    // Get the current position
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    setState(() {
+      _currentLocation = LatLng(position.latitude, position.longitude);
+      _mapController.move(_currentLocation!, 13.0);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    double distance = _calculateDistance(_rajkotLocation, _carLocation);
-    String travelTime = _calculateTime(distance);
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Book a Ride'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.play_arrow),
-            onPressed: _moveCarDynamically,
-          ),
-          IconButton(
-            icon: Icon(Icons.cancel),
-            onPressed: _cancelRide,
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -94,7 +76,7 @@ class _BookRideScreenState extends State<BookRideScreen> {
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              center: _rajkotLocation,
+              center: _currentLocation ?? LatLng(22.3039, 70.8022), // Default to Rajkot if no location
               zoom: 13.0,
             ),
             children: [
@@ -102,30 +84,21 @@ class _BookRideScreenState extends State<BookRideScreen> {
                 urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                 subdomains: ['a', 'b', 'c'],
               ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    width: 80.0,
-                    height: 80.0,
-                    point: _rajkotLocation,
-                    builder: (ctx) => Icon(
-                      Icons.location_on,
-                      color: Colors.green,
-                      size: 40.0,
+              if (_currentLocation != null)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      width: 80.0,
+                      height: 80.0,
+                      point: _currentLocation!,
+                      builder: (ctx) => Icon(
+                        Icons.my_location,
+                        color: Colors.blue,
+                        size: 40.0,
+                      ),
                     ),
-                  ),
-                  Marker(
-                    width: 80.0,
-                    height: 80.0,
-                    point: _carLocation,
-                    builder: (ctx) => Icon(
-                      Icons.directions_car,
-                      color: Colors.red,
-                      size: 40.0,
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
             ],
           ),
           // Foreground content: Booking section
