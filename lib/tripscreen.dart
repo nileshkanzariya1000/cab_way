@@ -76,40 +76,15 @@ class _TripScreenState extends State<TripScreen> {
           Expanded(
             child: FlutterMap(
               options: MapOptions(
-                center: _carLocation, // Center the map on the car location
-                zoom: 13.0,
+                initialCenter: _carLocation, // Center the map on the car location
+                maxZoom: 13.0,
               ),
               children: [
                 TileLayer(
                   urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                   subdomains: ['a', 'b', 'c'],
                 ),
-                MarkerLayer(
-                  markers: [
-                    // Marker for the car
-                    Marker(
-                      width: 80.0,
-                      height: 80.0,
-                      point: _carLocation,
-                      builder: (ctx) => Icon(
-                        Icons.directions_car,
-                        color: Colors.red,
-                        size: 40.0,
-                      ),
-                    ),
-                    // Marker for the dropoff location
-                    Marker(
-                      width: 80.0,
-                      height: 80.0,
-                      point: _dropoffLocation,
-                      builder: (ctx) => Icon(
-                        Icons.location_on,
-                        color: Colors.green,
-                        size: 40.0,
-                      ),
-                    ),
-                  ],
-                ),
+               
               ],
             ),
           ),

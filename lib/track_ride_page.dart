@@ -75,8 +75,8 @@ class _TrackRidePageState extends State<TrackRidePage> {
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
-              center: _carLocation,
-              zoom: 13.0,
+              initialCenter: _carLocation,
+              maxZoom: 13.0,
             ),
             children: [
               TileLayer(
@@ -93,31 +93,7 @@ class _TrackRidePageState extends State<TrackRidePage> {
                   ),
                 ],
               ),
-              // Markers for car and destination
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    width: 80.0,
-                    height: 80.0,
-                    point: _destinationLocation,
-                    builder: (ctx) => Icon(
-                      Icons.location_on,
-                      color: Colors.green,
-                      size: 40.0,
-                    ),
-                  ),
-                  Marker(
-                    width: 80.0,
-                    height: 80.0,
-                    point: _carLocation,
-                    builder: (ctx) => Icon(
-                      Icons.directions_car,
-                      color: Colors.red,
-                      size: 40.0,
-                    ),
-                  ),
-                ],
-              ),
+            
             ],
           ),
           // Ride Details Card at the Top
