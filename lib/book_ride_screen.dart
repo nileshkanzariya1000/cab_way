@@ -1,3 +1,4 @@
+import 'package:cab_way/tripscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -460,6 +461,10 @@ if (showBookingWrapper) // Conditionally show the wrapper
             onPressed: () {
               // Add your booking logic here
               print("Ride booked from ${fromController.text} to ${toController.text}!");
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RideBookingScreen()),
+                  );
             },
             child: Text('Book Ride'),
             style: ElevatedButton.styleFrom(

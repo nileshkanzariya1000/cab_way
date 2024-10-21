@@ -1,130 +1,160 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart'; // Ensure you add the flutter_map package
-import 'package:latlong2/latlong.dart';
-import 'package:latlong2/latlong.dart' as latlong;
 
-class TripScreen extends StatefulWidget {
-  @override
-  _TripScreenState createState() => _TripScreenState();
+void main() {
+  runApp(BookRideApp());
 }
 
-class _TripScreenState extends State<TripScreen> {
-  final LatLng _pickupLocation = LatLng(22.2558, 70.8050); // RK University
-  final LatLng _dropoffLocation = LatLng(22.3072, 70.8022); // Greenland chokdi
-
-  // Initial car location (starting at RK University)
-  LatLng _carLocation = LatLng(22.2558, 70.8050);
-
-  // Timer for car movement
-  Timer? _timer;
-  bool _isTripStarted = false;
-
-  // Speed and distance calculations
-  final double _averageSpeed = 50.0; // km/h
-  final Distance _distance = Distance();
-
-  // Calculate distance between two LatLng points
-  double _calculateDistance(LatLng start, LatLng end) {
-    return _distance.as(LengthUnit.Kilometer, start, end);
+class BookRideApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Book Ride',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: RideBookingScreen(),
+    );
   }
+}
 
-  // Move the car dynamically from the pickup to the dropoff location
-  void _startTrip() {
-    if (!_isTripStarted) {
-      _isTripStarted = true;
-      _timer = Timer.periodic(Duration(milliseconds: 100), (timer) {
-        setState(() {
-          double totalDistance = _calculateDistance(_carLocation, _dropoffLocation);
+class RideBookingScreen extends StatefulWidget {
+  @override
+  _RideBookingScreenState createState() => _RideBookingScreenState();
+}
 
-          if (totalDistance < 0.1) {
-            // Stop the timer once the car reaches the destination
-            timer.cancel();
-          } else {
-            // Move the car towards the dropoff location in small steps
-            double step = 0.001;
-            LatLng direction = LatLng(
-              _dropoffLocation.latitude - _carLocation.latitude,
-              _dropoffLocation.longitude - _carLocation.longitude,
-            );
-
-            // Calculate the new car location
-            _carLocation = LatLng(
-              _carLocation.latitude + (direction.latitude * step / totalDistance),
-              _carLocation.longitude + (direction.longitude * step / totalDistance),
-            );
-          }
-        });
-      });
-    }
-  }
+class _RideBookingScreenState extends State<RideBookingScreen> {
+  bool _isConfirmed = false;
 
   @override
-  void dispose() {
-    _timer?.cancel(); // Cancel the timer when the widget is disposed
-    super.dispose();
+  void initState() {
+    super.initState();
+    _confirmRide();
+  }
+
+  void _confirmRide() {
+    Future.delayed(Duration(seconds: 5), () {
+      setState(() {
+        _isConfirmed = true;
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ongoing Trip'),
+        title: Text('Book Ride'),
+        centerTitle: true,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: FlutterMap(
-              options: MapOptions(
-                initialCenter: _carLocation, // Center the map on the car location
-                maxZoom: 13.0,
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                  subdomains: ['a', 'b', 'c'],
-                ),
-               
-              ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.black, Colors.black],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: _isConfirmed ? _buildConfirmedRideDetails() : _buildWaitingForDriver(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWaitingForDriver() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Icon(
+          Icons.local_taxi,
+          size: 100,
+          color: Colors.white,
+        ),
+        SizedBox(height: 20),
+        Text(
+          'Waiting for Driver Confirmation...',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: 40),
+        ElevatedButton(
+          onPressed: () {
+            // Add your cancellation logic here
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Booking Canceled')),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
             ),
           ),
-          Container(
-            padding: EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10.0,
-                  spreadRadius: 1.0,
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Ram', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                SizedBox(height: 10),
-                Text('Pickup Location: RK University, Tramba', style: TextStyle(fontSize: 16)),
-                SizedBox(height: 5),
-                Text('Drop-off Location: Greenland chokdi, Rajkot', style: TextStyle(fontSize: 16)),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    _startTrip(); // Start the trip when button is pressed
-                    print('Trip Started');
-                  },
-                  child: Text('START TRIP'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 50),
-                    backgroundColor: Colors.green,
-                  ),
-                ),
-              ],
+          child: Text(
+            'Cancel Booking',
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConfirmedRideDetails() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Icon(
+          Icons.check_circle,
+          size: 100,
+          color: Colors.green,
+        ),
+        SizedBox(height: 20),
+        Text(
+          'Ride Confirmed!',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: 20),
+        Text(
+          'Driver: John Doe',
+          style: TextStyle(fontSize: 18, color: Colors.white),
+        ),
+        Text(
+          'Vehicle: Toyota Camry',
+          style: TextStyle(fontSize: 18, color: Colors.white),
+        ),
+        Text(
+          'License Plate: ABC-1234',
+          style: TextStyle(fontSize: 18, color: Colors.white),
+        ),
+        SizedBox(height: 40),
+        ElevatedButton(
+          onPressed: () {
+            // Logic for ride completion or further actions
+          },
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
             ),
           ),
-        ],
-      ),
+          child: Text(
+            'View Ride Details',
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+      ],
     );
   }
 }
