@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
-void main() {
-  runApp(BookRideApp());
-}
+
 
 class BookRideApp extends StatelessWidget {
   @override
@@ -25,11 +24,22 @@ class RideBookingScreen extends StatefulWidget {
 
 class _RideBookingScreenState extends State<RideBookingScreen> {
   bool _isConfirmed = false;
+    Razorpay _razorpay=Razorpay();
 
   @override
   void initState() {
     super.initState();
     _confirmRide();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  }
+
+  @override
+  void dispose() {
+    _razorpay.clear();
+    super.dispose();
   }
 
   void _confirmRide() {
@@ -38,6 +48,46 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
         _isConfirmed = true;
       });
     });
+  }
+
+  void _openCheckout() {
+    var options = {
+      'key': 'rzp_test_Lrcnvh6GWwPg9S',  // Replace with your Razorpay key
+      'amount': 50000,  // Amount in paise (50000 paise = INR 500)
+      'name': 'Ride Booking',
+      'description': 'Ride Confirmation Payment',
+      'prefill': {
+        'contact': '1234567890', // Replace with user contact
+        'email': 'user@example.com' // Replace with user email
+      },
+      'theme': {
+        'color': '#F37254'
+      }
+    };
+
+    try {
+      _razorpay.open(options);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Payment Success: ${response.paymentId}")),
+    );
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Payment Failed: ${response.code} - ${response.message}")),
+    );
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("External Wallet: ${response.walletName}")),
+    );
   }
 
   @override
@@ -56,7 +106,9 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
           ),
         ),
         child: Center(
-          child: _isConfirmed ? _buildConfirmedRideDetails() : _buildWaitingForDriver(),
+          child: _isConfirmed 
+            ? _buildConfirmedRideDetails() 
+            : _buildWaitingForDriver(),
         ),
       ),
     );
@@ -139,9 +191,7 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
         ),
         SizedBox(height: 40),
         ElevatedButton(
-          onPressed: () {
-            // Logic for ride completion or further actions
-          },
+          onPressed: _openCheckout,
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
             backgroundColor: Colors.white,
@@ -150,7 +200,7 @@ class _RideBookingScreenState extends State<RideBookingScreen> {
             ),
           ),
           child: Text(
-            'View Ride Details',
+            'Pay Now',
             style: TextStyle(fontSize: 18),
           ),
         ),

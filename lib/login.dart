@@ -1,9 +1,13 @@
+import 'package:cab_way/home_screen.dart';
 import 'package:cab_way/otp.dart';
 import 'package:cab_way/sign_up.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(CabwayApp());
 }
 
@@ -17,17 +21,34 @@ class CabwayApp extends StatelessWidget {
 }
 
 class Mainscreen extends StatelessWidget {
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final TextEditingController _phoneController = TextEditingController();
+  String _verificationId = '';
 
-  // Function to handle Google sign-in
-  Future<void> _handleGoogleSignIn() async {
-    try {
-      await _googleSignIn.signIn();
-      // Handle sign-in success (navigate to another screen, etc.)
-    } catch (error) {
-      print('Google sign-in error: $error');
-      // Handle sign-in error
-    }
+  // Method to send OTP
+  void _sendOTP(BuildContext context) async {
+    await _auth.verifyPhoneNumber(
+      phoneNumber: '+91' + _phoneController.text,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        await _auth.signInWithCredential(credential);
+        // Navigate to home screen or main app screen on auto-verification success
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        print('Phone verification failed: $e');
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        _verificationId = verificationId;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OtpScreen(verificationId: _verificationId),
+          ),
+        );
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        _verificationId = verificationId;
+      },
+    );
   }
 
   @override
@@ -38,29 +59,25 @@ class Mainscreen extends StatelessWidget {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Stack for image background and title
               Stack(
                 children: [
-                  // Background image
                   Container(
                     width: double.infinity,
-                    height: 200, // Adjust the height as needed
+                    height: 200,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: AssetImage(
-                            'assets/image/cab_image.jpg'), // Update with the correct image path
+                        image: AssetImage('assets/image/cab_image.jpg'),
                         fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                  // Positioned "Cabway" text
                   Positioned(
-                    bottom: 20, // Position from bottom of the image
-                    left: 20, // Position from left side
+                    bottom: 20,
+                    left: 20,
                     child: Text(
                       'Cabway',
                       style: TextStyle(
-                        color: Colors.white, // Text color contrasting the image
+                        color: Colors.white,
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
                         shadows: [
@@ -75,10 +92,7 @@ class Mainscreen extends StatelessWidget {
                   ),
                 ],
               ),
-
               SizedBox(height: 40),
-
-              // Enter your mobile number text
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Align(
@@ -93,15 +107,11 @@ class Mainscreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               SizedBox(height: 20),
-
-              // Mobile Number Input
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   children: [
-                    // Country code
                     Container(
                       padding:
                           EdgeInsets.symmetric(horizontal: 12, vertical: 16),
@@ -118,10 +128,9 @@ class Mainscreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: 10),
-
-                    // Mobile Number field
                     Expanded(
                       child: TextField(
+                        controller: _phoneController,
                         keyboardType: TextInputType.phone,
                         decoration: InputDecoration(
                           hintText: '98########',
@@ -134,10 +143,7 @@ class Mainscreen extends StatelessWidget {
                   ],
                 ),
               ),
-
               SizedBox(height: 20),
-
-              // Next Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: SizedBox(
@@ -145,16 +151,13 @@ class Mainscreen extends StatelessWidget {
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black, // Button color
+                      backgroundColor: Colors.black,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => Otp()),
-                      );
+                      _sendOTP(context);
                     },
                     child: Text(
                       'Next',
@@ -163,86 +166,32 @@ class Mainscreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               SizedBox(height: 20),
-
-              // OR separator
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(child: Divider(thickness: 1)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text("OR"),
+                  Text(
+                    "Don't have an account?",
+                    style: TextStyle(fontSize: 16, color: Colors.black54),
                   ),
-                  Expanded(child: Divider(thickness: 1)),
-                ],
-              ),
-
-              SizedBox(height: 20),
-
-              // Google Sign-In Button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue, // Google button color
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => SignUpScreen()),
+                      );
+                    },
+                    child: Text(
+                      "Sign Up",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
                       ),
                     ),
-                    onPressed: _handleGoogleSignIn,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.login, color: Colors.white),
-                        SizedBox(width: 10),
-                        Text(
-                          'Sign in with Google',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                      ],
-                    ),
                   ),
-                ),
-              ),
-
-              SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
-      // Bottom bar for Sign Up
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        elevation: 0,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Don't have an account?",
-                style: TextStyle(fontSize: 16, color: Colors.black54),
-              ),
-              SizedBox(width: 8),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SignUpApp()),
-                  );
-                },
-                child: Text(
-                  "Sign Up",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
+                ],
               ),
             ],
           ),
@@ -253,3 +202,70 @@ class Mainscreen extends StatelessWidget {
 }
 
 
+class OtpScreen extends StatelessWidget {
+  final String verificationId;
+  final TextEditingController _otpController = TextEditingController();
+
+  OtpScreen({required this.verificationId});
+
+  void _verifyOTP(BuildContext context) async {
+    final credential = PhoneAuthProvider.credential(
+      verificationId: verificationId,
+      smsCode: _otpController.text,
+    );
+
+    try {
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login successful!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Navigate to the main app screen or home screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to verify OTP. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Enter OTP')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _otpController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: 'OTP'),
+            ),
+            SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => _verifyOTP(context),
+                child: Text('Verify'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

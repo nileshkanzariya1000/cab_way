@@ -1,19 +1,76 @@
 import 'package:cab_way/home_screen.dart';
-import 'package:cab_way/services_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-
-class SignUpApp extends StatelessWidget {
+class SignUpScreen extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: SignUpScreen(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
+  _SignUpScreenState createState() => _SignUpScreenState();
 }
 
-class SignUpScreen extends StatelessWidget {
+class _SignUpScreenState extends State<SignUpScreen> {
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController(); // Controller for OTP input
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  String? _verificationId;
+  bool _isOtpSent = false; // Track if OTP has been sent
+
+  void _verifyPhoneNumber() async {
+    await _auth.verifyPhoneNumber(
+      phoneNumber: _phoneController.text,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        await _auth.signInWithCredential(credential);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        // Handle error
+        print('Verification failed: ${e.message}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Verification failed: ${e.message}')),
+        );
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        setState(() {
+          _verificationId = verificationId;
+          _isOtpSent = true; // Set flag to show OTP input
+        });
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        setState(() {
+          _verificationId = verificationId;
+        });
+      },
+    );
+  }
+
+  void _verifyOTP() async {
+    if (_verificationId != null && _otpController.text.isNotEmpty) {
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId!,
+        smsCode: _otpController.text,
+      );
+
+      try {
+        await _auth.signInWithCredential(credential);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } catch (e) {
+        print('OTP verification failed: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('OTP verification failed. Please try again.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,125 +88,65 @@ class SignUpScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 20),
-            Text(
-              'Congratulations',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('Congratulations', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             SizedBox(height: 5),
-            Text(
-              'on verifying the phone belongs to you',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
+            Text('on verifying the phone belongs to you', style: TextStyle(fontSize: 16, color: Colors.grey)),
             SizedBox(height: 20),
-            Text(
-              'Sign up',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              'we need something more',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
+            Text('Sign up', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+            Text('we need something more', style: TextStyle(fontSize: 16, color: Colors.grey)),
             SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
                   child: TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Firstname',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
+                    controller: _firstNameController,
+                    decoration: InputDecoration(labelText: 'Firstname', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
                   ),
                 ),
                 SizedBox(width: 10),
                 Expanded(
                   child: TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Lastname',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
+                    controller: _lastNameController,
+                    decoration: InputDecoration(labelText: 'Lastname', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
                   ),
                 ),
               ],
             ),
             SizedBox(height: 10),
             TextField(
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+              controller: _phoneController,
+              decoration: InputDecoration(labelText: 'Mobile number', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
             ),
+            SizedBox(height: 20),
+            if (_isOtpSent)
+              TextField(
+                controller: _otpController,
+                decoration: InputDecoration(
+                  labelText: 'Enter OTP',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                keyboardType: TextInputType.number,
+              ),
             SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomeScreen()),
-                  );
+                  if (_isOtpSent) {
+                    _verifyOTP();
+                  } else {
+                    _verifyPhoneNumber();
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 15),
                   backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: Text(
-                  'Register',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ),
-            SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {},
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                icon: Icon(Icons.g_mobiledata, size: 24, color: Colors.black),
-                label: Text(
-                  'Continue with Google',
-                  style: TextStyle(fontSize: 16, color: Colors.black),
-                ),
+                child: Text(_isOtpSent ? 'Verify OTP' : 'Register', style: TextStyle(fontSize: 16, color: Colors.white)),
               ),
             ),
             Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.arrow_back_ios, color: Colors.grey),
-                  onPressed: () {},
-                ),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[200],
-                    shape: CircleBorder(),
-                    padding: EdgeInsets.all(15),
-                  ),
-                  child: Icon(Icons.arrow_forward_ios, color: Colors.black),
-                ),
-              ],
-            ),
           ],
         ),
       ),

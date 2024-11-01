@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "296079867649",
+    "project_id": "cabwayproject",
+    "storage_bucket": "cabwayproject.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:296079867649:android:92033d88e57a7ef773a500",
+        "android_client_info": {
+          "package_name": "com.example.cab_way"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_OoQhEIYr__cGtOoZ5q_mrz3vy70DnXY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
