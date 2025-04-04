@@ -15,9 +15,9 @@ class PolylineMap1 extends StatefulWidget {
 class _PolylineMap1State extends State<PolylineMap1> {
   final MapController mapController = MapController();
   List<LatLng> polylineCoordinates = [];
-  String graphhopperApiKey ='1637e30b-6080-4daf-8af4-a0efef04b00c'; // Replace with your GraphHopper API key
-  String openRouteServiceApiKey ='5b3ce3597851110001cf6248548ab30428014f9d9bcaafc96a969392'; // Replace with your OpenRouteService API key
-    final String mapboxApiKey = 'pk.eyJ1IjoibmtwYXRlbDEyIiwiYSI6ImNtMmRhams4NDBqMTAycXNmMzVvNDU4bDQifQ._1RzxBgB7zNY9CEtsxkQYA';
+  String graphhopperApiKey ='graphhopperApiKey'; // Replace with your GraphHopper API key
+  String openRouteServiceApiKey='openRouteServiceApiKey'; // Replace with your OpenRouteService API key
+    final String mapboxApiKey = 'mapboxApiKey';
   final String mapboxStyle = 'mapbox/outdoors-v12';
 
 bool showBookingWrapper = false; // New variable
