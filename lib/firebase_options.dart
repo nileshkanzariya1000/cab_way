@@ -41,8 +41,8 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBqrG_RIuMnHqO3Vz6dzixXgwlZyCpBGy0',
-    appId: '1:296079867649:web:bcf804287496a79a73a500',
+    apiKey: 'apiKey',
+    appId: 'appId',
     messagingSenderId: '296079867649',
     projectId: 'cabwayproject',
     authDomain: 'cabwayproject.firebaseapp.com',
@@ -51,16 +51,16 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyD_OoQhEIYr__cGtOoZ5q_mrz3vy70DnXY',
-    appId: '1:296079867649:android:92033d88e57a7ef773a500',
+    apiKey: 'apiKey',
+    appId: 'appId',
     messagingSenderId: '296079867649',
     projectId: 'cabwayproject',
     storageBucket: 'cabwayproject.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBHv2IH_sofZspkP5bAK0rF5y_2XFLFPDg',
-    appId: '1:296079867649:ios:2060891945e63f7373a500',
+    apiKey: 'apiKey',
+    appId: 'appId',
     messagingSenderId: '296079867649',
     projectId: 'cabwayproject',
     storageBucket: 'cabwayproject.firebasestorage.app',
@@ -68,8 +68,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBHv2IH_sofZspkP5bAK0rF5y_2XFLFPDg',
-    appId: '1:296079867649:ios:2060891945e63f7373a500',
+    apiKey: 'apiKey',
+    appId: 'appId',
     messagingSenderId: '296079867649',
     projectId: 'cabwayproject',
     storageBucket: 'cabwayproject.firebasestorage.app',
@@ -77,8 +77,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBqrG_RIuMnHqO3Vz6dzixXgwlZyCpBGy0',
-    appId: '1:296079867649:web:62a75c2b99501c9973a500',
+    apiKey: 'apiKey',
+    appId: 'appId',
     messagingSenderId: '296079867649',
     projectId: 'cabwayproject',
     authDomain: 'cabwayproject.firebaseapp.com',
